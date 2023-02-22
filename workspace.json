@@ -1,4 +1,8 @@
 {
   "version": 2,
-  "projects": {}
+  "projects": {
+    "emails": "packages/emails",
+    "emails-e2e": "packages/emails-e2e"
+  },
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }
