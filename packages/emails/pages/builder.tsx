@@ -20,22 +20,41 @@ const Builder = () => {
   const router = useRouter();
   const { handleSubmit, control } = useForm();
   const [columns, setColumns] = useState([]);
+  const [template, setTemplate] = useState([]);
+  let { templateId } = router.query
+  templateId = Array.isArray(templateId) ? templateId[0] : templateId
 
   const fetchColumns = async () => {
     const data = await SelfService.getAllColumns();
     setColumns(data);
   }
 
+  const fetchTemplate = async (templateId) => {
+    const data = await SelfService.getTemplate(templateId);
+    console.log("Got Template", data)
+    setTemplate(data.content);
+  }
+
+  useEffect(()=>{
+    window.editor.setComponents(template, {});
+  }, [template, window.editor])
+
   useEffect(()=>{
     fetchColumns();
   }, [])
+
+  useEffect(()=>{
+    if(templateId){
+      fetchTemplate(templateId);
+    }
+  }, [templateId])
 
   const onSave = async (data, event: React.BaseSyntheticEvent) => {
     const content = window.editor.getHtml();
     console.log(data);
     const name = data.name;
 
-    const success = await SelfService.saveTemplate(name, content);
+    const success = await SelfService.saveTemplate(name, content, templateId);
     if(success){
       router.push("/templates");
     }

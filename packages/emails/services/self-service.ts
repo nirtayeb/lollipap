@@ -37,10 +37,40 @@ export class SelfService {
         }
     }
 
-    static async saveTemplate(name, content){
+    static async getTemplate(templateId: string) {
         try{
-             await axios.post('/api/templates', {name, content}, {withCredentials: true});
+            const res = await axios.get('/api/templates', {params:{templateId}, withCredentials: true})
+            return res.data;
+        }catch(err){
+            console.log(err);
+            return '';
+        }
+    }
+
+    static async saveTemplate(name, content, templateId){
+        try{
+             await axios.post('/api/templates', {name, content, templateId}, {withCredentials: true});
              return true;
+        }catch(err){
+            console.log(err);
+            return false;
+        }
+    }
+
+    static async deleteTemplate(templateId){
+        try{
+            await axios.delete('/api/templates', {data: {templateId}, withCredentials: true})
+            return true;
+        }catch(err){
+            console.log(err);
+            return false;
+        }
+    }
+
+    static async duplicateTemplate(templateId){
+        try{
+            await axios.post('/api/duplicate_template', {templateId}, {withCredentials: true})
+            return true;
         }catch(err){
             console.log(err);
             return false;

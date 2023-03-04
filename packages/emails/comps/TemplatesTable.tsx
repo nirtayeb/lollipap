@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation'
 import DeleteIcon from '@mui/icons-material/Delete';
 import { SelfService } from '../services/self-service';
 import Link from 'next/link';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import EditIcon from '@mui/icons-material/Edit';
 
 const TemplateAdmin = ({ templates }) => {
 
@@ -22,16 +24,34 @@ const TemplateAdmin = ({ templates }) => {
     
     const onCloseCallback = useCallback(() => setToastOpen(false), [setToastOpen]);
 
-    const onDelete = async (email) => {
+    const onDelete = async (template) => {
         setToastOpen(false);
-        const deleted = await SelfService.deleteSender(email);
+        const deleted = await SelfService.deleteTemplate(template.id);
         if(deleted){
-            setToastText(`${email} Deleted successfuly`)
+            setToastText(`Template ${template.name} Deleted successfuly`)
             router.refresh()
         }else{
-            setToastText(`Couldn't delete ${email}, please try again later`)
+            setToastText(`Couldn't delete ${template.name}, please try again later`)
         }
         setToastOpen(true);
+    }
+
+    const handleCopy = async (template) => {
+      setToastOpen(false);
+      const copied = await SelfService.duplicateTemplate(template.id);
+      if(copied){
+        if(copied){
+          setToastText(`Template ${template.name} duplicated successfuly`)
+          router.refresh()
+      }else{
+          setToastText(`Couldn't duplicate ${template.name}, please try again later`)
+      }
+      setToastOpen(true);
+      }
+    }
+
+    const handleEdit = async(template) => {
+      router.push(`/builder?templateId=${template.id}`)
     }
 
   return (
@@ -72,7 +92,7 @@ const TemplateAdmin = ({ templates }) => {
               {templates.map((template) => {
 
                 const handleDelete = async() => {
-                    await onDelete(template.id)
+                    await onDelete(template)
                 }
 
                 return (<TableRow
@@ -81,7 +101,9 @@ const TemplateAdmin = ({ templates }) => {
                 >
                   <TableCell>{template.name}</TableCell>
                   <TableCell align="right">
-                        <Button variant="text" size="small" color="error" onClick={handleDelete}><DeleteIcon /></Button>
+                      <Button variant="text" size="small" color="primary" onClick={()=> handleEdit(template)}><EditIcon /></Button>
+                      <Button varaint="text" size="small" color="secondary" onClick={()=> handleCopy(template)}><ContentCopyIcon /></Button>
+                      <Button variant="text" size="small" color="error" onClick={handleDelete}><DeleteIcon /></Button>
                     </TableCell>
                   
                 </TableRow>)
