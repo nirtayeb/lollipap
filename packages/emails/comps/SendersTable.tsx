@@ -12,7 +12,6 @@ import AddSenderModal from './AddSenderModal';
 import { useRouter } from 'next/navigation'
 import DeleteIcon from '@mui/icons-material/Delete';
 import ReplayIcon from '@mui/icons-material/Replay';
-import ButtonUnstyled from '@mui/base/ButtonUnstyled';
 import { SelfService } from '../services/self-service';
 
 const SendersAdmin = ({ senders }) => {
@@ -45,9 +44,22 @@ const SendersAdmin = ({ senders }) => {
             setToastText(`${email} Deleted successfuly`)
             router.refresh()
         }else{
-            setToastText(`Couldn't delete ${email}, please try again later`)
+            setToastText(`Couldn't delete ${email}, please try again later`);
         }
         setToastOpen(true);
+    }
+
+    const resendVerification = async (sender) => {
+      console.log("resend clicked", sender);
+      setToastOpen(false);
+      const sent = await SelfService.resendVerification(sender.id)
+      if(sent){
+        setToastText(`Verification email resent to ${sender.email}`);
+        router.refresh()
+      }else{
+        setToastText(`Couldn't resent verification email to ${sender.email}, please try again later`);
+      }
+      setToastOpen(true);
     }
 
   return (
@@ -88,7 +100,11 @@ const SendersAdmin = ({ senders }) => {
               {senders.map((sender) => {
 
                 const handleDelete = async() => {
-                    await onDelete(sender.email)
+                    await onDelete(sender.email);
+                }
+
+                const handleResend = async() => {
+                  await resendVerification(sender);
                 }
 
                 return (<TableRow
@@ -96,9 +112,9 @@ const SendersAdmin = ({ senders }) => {
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
                   <TableCell align="left">{sender.email}</TableCell>
-                  <TableCell align="left">{sender.status}</TableCell>
+                  <TableCell align="left">{sender.verified}</TableCell>
                   <TableCell align="right">
-                        <Button variant="text" size="small" color="secondary"><ReplayIcon /></Button>
+                        <Button variant="text" size="small" color="secondary" onClick={handleResend}><ReplayIcon /></Button>
                         <Button variant="text" size="small" color="error" onClick={handleDelete}><DeleteIcon /></Button>
                 </TableCell>
                   
