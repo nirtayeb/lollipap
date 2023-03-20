@@ -4,6 +4,7 @@ import SenderRepository from 'packages/emails/lib/repositories/senders';
 import prisma from '../../lib/prisma';
 import { authOptions } from './auth/[...nextauth]';
 import { UserRepository } from '../../lib/repositories/users';
+import MailService from '../../services/mailer-service';
 
 
 const handleDelete = async (req, res, orgnizationId) => {
@@ -19,14 +20,10 @@ const handleDelete = async (req, res, orgnizationId) => {
 
 
 const handlePost = async (req, res, organizationId) => {
+  const {name, email} = req.body;
     try {
-        const sender = await prisma.sender.create({
-          data: {
-            name: req.body.name,
-            email: req.body.email,
-            organization:{connect: { id: organizationId} as Prisma.OrganizationWhereUniqueInput}
-          } as Prisma.SenderCreateInput,
-        });
+      const sender = await SenderRepository.add(organizationId, name, email);
+      await MailService.verifyEmailIdentity(req.body.email);
     
         res.status(200).json({ ok: true });
       } catch (err) {
@@ -54,6 +51,7 @@ const handler = async (req, res) => {
 
   if (req.method == 'POST') {
     await handlePost(req, res, organizationId);
+    return;
   }
 
   console.log("WTF")

@@ -23,7 +23,8 @@ const AddSenderModal = ({open, onClose, onSuccess, onFailure}) => {
     const { handleSubmit, control } = useForm();
 
     const onSubmit = async (data: {name, email}) => {
-        const created = await SelfService.addSender(data.name, data.email);
+        const { name, email } = data;
+        const created = await SelfService.addSender(name, email);
         console.log("Modal", created);
         if (created){
             onSuccess(name, email);

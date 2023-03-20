@@ -1,4 +1,5 @@
 import prisma from "../prisma";
+import { Prisma } from '@prisma/client';
 
 class SenderRepository {
 
@@ -6,15 +7,26 @@ class SenderRepository {
         return await prisma.sender.findMany({where: {organizationId}})
     }
 
-    static async markVerified(id: string) {
+    static async get(senderId: number, organizationId: string) {
+        return await prisma.sender.findFirst({where: {id: senderId, organizationId}})
+    }
+
+    static async markVerified(id: number) {
         const updateSender = await prisma.sender.update({where: {id}, data:{status:1} });
         return updateSender;
     }
 
-    static async add(organizationId: string, email: string) {
-        const sender = await prisma.sender.create({data:{organizationId, email, status:0}});
-        return sender;
+    static async add(organizationId: string, name: string, email: string) {
+        return await prisma.sender.create({
+            data: {
+              name: name,
+              email: email,
+              organization:{connect: { id: organizationId} as Prisma.OrganizationWhereUniqueInput}
+            } as Prisma.SenderCreateInput,
+          });
     }
+
+
 
     static async remove(email: string){
         await prisma.sender.delete({where: {email}});
