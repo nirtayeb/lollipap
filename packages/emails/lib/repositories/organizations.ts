@@ -12,4 +12,8 @@ export default class OrganizationRepository {
         return await prisma.organization.create({data: {id}});
     }
 
+    static async deactivate(id: string){
+        return await prisma.organization.update({where:{id}, data:{active:false}});
+    }
+
 }
