@@ -3,14 +3,13 @@ import { getMondayToken } from "packages/emails/lib/monday";
 
 
 const handler = async (req, res) => {
-
     console.log("TemplatesGET", req.headers.authorization, req.query.token);
     const authorization = req.headers.authorization ?? req.query.token as string;
     const { accountId, userId } = getMondayToken(authorization);
 
     console.log("TemplatesGET", accountId, userId);
 
-    const templates = await TemplateRepository.getTemplateByOrganization(userId.toString());
+    const templates = await TemplateRepository.getTemplateByOrganization(accountId.toString());
     const options = templates.map((template)=>({title: template.name, value: template.id.toString()}))
     console.log("Templates", options)
 

@@ -26,10 +26,12 @@ class SenderRepository {
           });
     }
 
-
-
     static async remove(email: string){
         await prisma.sender.delete({where: {email}});
+    }
+
+    static async countSenders(organizationId: string) {
+        return await prisma.sender.count({where: {organizationId}})
     }
 
 }

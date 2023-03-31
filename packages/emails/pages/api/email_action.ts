@@ -1,24 +1,30 @@
-import mondayService from 'packages/emails/services/monday-service';
 import { getMondayToken } from 'packages/emails/lib/monday';
 import mailService from 'packages/emails/services/mailer-service';
 import { TemplateRepository } from '../../lib/repositories/templates';
 import MondayService from 'packages/emails/services/monday-service';
-import { contentColors } from 'monday-ui-react-core/dist/types/utils/colors-vars-map';
+import SubscriptionService from '../../services/subscription-service';
+import OrganizationRepository from 'packages/emails/lib/repositories/organizations';
 
 
 async function handler(req, res) {
 
   const authorization = req.headers.authorization ?? req.query.token as string;
-  const { shortLivedToken, userId } = getMondayToken(authorization);
+  const { accountId, shortLivedToken } = getMondayToken(authorization);
   const { payload } = req.body;
 
-  console.log(payload);
+  console.log(accountId, payload);
+
+  if(!await SubscriptionService.canSendEmail(accountId)){
+    console.log("Reached plan limit, cannot send email");
+    res.status(200).send({});
+    return;
+  }
 
   try {
     const { inboundFieldValues } = payload;
     const { boardId, email, templateId, itemId } = inboundFieldValues;
 
-    const template = await TemplateRepository.getTemplate(parseInt(templateId.value), userId)
+    const template = await TemplateRepository.getTemplate(parseInt(templateId.value), accountId)
 
     const varRegex = /{{.+?}}/g;
     const removeVar = /[{}]/g;
@@ -42,6 +48,7 @@ async function handler(req, res) {
     console.log(content);
 
     await mailService.sendEmail('devweekendapps@gmail.com', 'devweekendapps@gmail.com', [email], 'TEst', content);
+    await OrganizationRepository.increaseMailUsage(accountId);
 
     return res.status(200).send({});
   } catch (err) {

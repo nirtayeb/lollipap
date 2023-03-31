@@ -4,13 +4,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { UserRepository } from '../../lib/repositories/users';
 import { TemplateRepository } from '../../lib/repositories/templates';
+import { UserService } from "packages/emails/services/user-service";
 
 const handlePost = async(req, res) => {
-    const session= await getServerSession(req, res, authOptions) as Session;
-    const user = await UserRepository.getUser(session.user.email)
+    const orgId = await UserService.getOrganizationId(req, res);
     const { templateId } = req.body;
-
-    const template = await TemplateRepository.duplicate(user.accounts[0].providerAccountId.toString(), templateId);
+    const template = await TemplateRepository.duplicate(orgId, templateId);
     res.status(200).json(template);
 
 }

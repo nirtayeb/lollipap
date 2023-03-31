@@ -3,54 +3,57 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { UserRepository } from '../../lib/repositories/users';
 import { TemplateRepository } from '../../lib/repositories/templates';
+import { UserService } from "packages/emails/services/user-service";
+import SubscriptionService from '../../services/subscription-service';
 
 
-const getAccountId = async (req, res) => {
-    const session= await getServerSession(req, res, authOptions) as Session;
-    const user = await UserRepository.getUser(session.user.email)
-    return user.accounts[0].providerAccountId.toString();
-}
-
-const handlePost = async (req, res) => {
-    const orgId = await getAccountId(req, res)
+const handlePost = async (req, res, orgId) => {
     const { name, content, templateId } = req.body;
     let template;
     
     if(templateId) {
         template = await TemplateRepository.update(orgId, templateId, name, content);
-    }else{
-        template = await TemplateRepository.createTemplate(orgId, name, content);
+        res.status(200).json(template);
+        return;
     }
 
+    if(!await SubscriptionService.canAddTemplate(orgId)){
+        res.status(401).json({error: "You've reached your plan limits"});
+        return;
+    }
+
+    template = await TemplateRepository.createTemplate(orgId, name, content);
     res.status(200).json(template);
+    return;
+
 }
 
-const handleDelete = async(req, res) => {
-    const session= await getServerSession(req, res, authOptions) as Session;
-    const user = await UserRepository.getUser(session.user.email)
+const handleDelete = async(req, res, orgId) => {
     const { templateId } = req.body;
 
-    const deleted = await TemplateRepository.deleteTemplate(user.accounts[0].providerAccountId.toString(), templateId)
+    const deleted = await TemplateRepository.deleteTemplate(orgId, templateId)
     res.status(200).json({ok: deleted})
 }
 
-const handleGet = async (req, res) => {
-    const organizationId = await getAccountId(req, res);
+const handleGet = async (req, res, orgId) => {
     const { templateId } = req.query;
-    const template = await TemplateRepository.getTemplate(parseInt(templateId), organizationId);
+    const template = await TemplateRepository.getTemplate(parseInt(templateId), orgId);
     res.status(200).json(template);
 }
 
 const handler = async (req, res) => {
+
+    const orgId = await UserService.getOrganizationId(req, res);
+
     switch(req.method){
         case 'POST':
-            await handlePost(req, res);
+            await handlePost(req, res, orgId);
             break;
         case 'DELETE':
-            await handleDelete(req, res);
+            await handleDelete(req, res, orgId);
             break;
         case 'GET':
-            await handleGet(req, res);
+            await handleGet(req, res, orgId);
             break;
         default:
             res.status(405).json({ok:false});

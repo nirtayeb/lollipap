@@ -1,16 +1,11 @@
-import { Session } from "next-auth";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "./auth/[...nextauth]";
-import { UserRepository } from '../../lib/repositories/users';
 import SenderRepository from '../../lib/repositories/senders';
 import MailService from '../../services/mailer-service';
+import { UserService } from "packages/emails/services/user-service";
 
 
 const handlePost = async(req, res) => {
-    const session= await getServerSession(req, res, authOptions) as Session;
-    const user = await UserRepository.getUser(session.user.email);
     const { senderId } = req.body;
-    const orgId = user.accounts[0].providerAccountId.toString()
+    const orgId = await UserService.getOrganizationId(req, res);
     const sender = await SenderRepository.get(senderId, orgId);
 
     const email = sender.email;

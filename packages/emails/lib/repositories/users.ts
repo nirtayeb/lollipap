@@ -9,8 +9,13 @@ export class UserRepository {
 
     
     static async getOrganizationIdByEmail(email: string) {
-        const account = await prisma.account.findFirst({where: {user: {email}}})
-        return account.providerAccountId
+        const user = await prisma.user.findFirst({where: {email}, include:{organization:true}})
+        return user.organization;
+    }
+
+    static async updateUserOrg(id: string, organizationId: string) {
+        console.log("updateUserOrg", id, organizationId);
+        await prisma.user.update({where: {id}, data: {organizationId}});
     }
 
 }

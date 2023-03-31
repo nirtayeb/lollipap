@@ -33,4 +33,8 @@ export class TemplateRepository {
         return await prisma.template.update({where: {id: templateId}, data: {name, content}});
     }
 
+    static async count(organizationId: string) {
+        return await prisma.template.count({where: {organizationId}});
+    }
+
 }

@@ -1,5 +1,5 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import NextAuth, { Account, NextAuthOptions, User as NextAuthUser } from 'next-auth';
+import NextAuth, { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import prisma from 'packages/emails/lib/prisma';
 import MondayService from 'packages/emails/services/monday-service'
 import OrganizationRepository from '../../../lib/repositories/organizations';
@@ -12,32 +12,32 @@ const CLIENT_ID = "330353da306b82058036f937a3328a71"
 const CLIENT_SECRET = "52f61876ae5bfcf9d2e6a4a05d168ab9"
 
 export const authOptions: NextAuthOptions = {
-    adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma),
   debug: true,
 
   session: { strategy: "jwt" },
 
   callbacks: {
     async signIn({ user,  account, profile, email, credentials }) {
-      console.log('Signin', user, account);
-      const exists = await OrganizationRepository.exists(account.providerAccountId);
-      console.log('ORg exists?', exists);
-      if (!exists) {
-       const org = await OrganizationRepository.create(account.providerAccountId);
-       console.log("Org created", org);
+      console.log('Signin', user, account, credentials);
+      const mondayUser = await MondayService.getCurrentUser(account["access_token"] as string);
+      const org = await OrganizationRepository.get(mondayUser.account.id.toString());
+      console.log('Org exists?', org);
+
+      if (!org || !org.active) {
+        console.log("Signin failed");
+        return false;
       }
+
       return true;
     },
     async redirect({ url, baseUrl }) {
-      console.log('!!#$$#$@#@@$#@#', url, baseUrl);
       return baseUrl;
     },
     async session(props: { session; user; token }) {
-      console.log('session', props);
       return props.session;
     },
     async jwt(props: { token, user, account, profile, isNewUser }) {
-        console.log("jwt", props)
       return props.token;
     },
   },
@@ -49,7 +49,7 @@ export const authOptions: NextAuthOptions = {
       type: 'oauth',
 
       clientId: CLIENT_ID,
-      clientSecret: '52f61876ae5bfcf9d2e6a4a05d168ab9',
+      clientSecret: CLIENT_SECRET,
       authorization: {
         url: 'https://auth.monday.com/oauth2/authorize?client_id='+CLIENT_ID,
         params: {
@@ -88,7 +88,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: profile.id,
           name: profile.name,
-          email: profile.email
+          email: profile.email,
         } as NextAuthUserWithStringId;
       },
     },

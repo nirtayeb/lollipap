@@ -17,6 +17,34 @@ model Organization {
   active Boolean    @default(true)
   senders Sender[]
   templates Template[]
+  subscriptions Subscription[]
+  emailUsages EmailUsage[]
+}
+
+model Plan {
+  id                String         @id
+  name              String
+  isFree            Boolean
+  emailLimit        Int
+  isBranded         Boolean
+  verifiedSenders   Int
+  emailTemplates    Int
+  subscriptions     Subscription[]
+}
+
+model Subscription {
+  id  String @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  active  Boolean @default(true)
+  renewalDate DateTime
+  isTrial Boolean
+  billingPeriod String
+  pricingVersion  Int?
+  organization  Organization @relation(fields:[organizationId], references: [id])
+  organizationId String
+  plan              Plan          @relation(fields: [planId], references: [id])
+  planId            String
 }
 
 model Account {
@@ -32,9 +60,7 @@ model Account {
   scope              String?
   id_token           String?  @db.Text
   session_state      String?
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([provider, providerAccountId])
 }
 
@@ -72,7 +98,7 @@ model Sender {
   organization Organization  @relation(fields: [organizationId], references: [id])
   organizationId String
   name  String
-  email   String   @unique
+  email   String
   status Int  @default(0)
 }
 
@@ -84,4 +110,14 @@ model Template {
   organizationId String
   name String
   content String
+}
+
+model EmailUsage {
+  id      Int      @id @default(autoincrement())
+  organizationId    String
+  emailsSent        Int
+  periodStart       DateTime
+  periodEnd         DateTime
+  isCurrent         Boolean       @default(true)
+  organization      Organization  @relation(fields: [organizationId], references: [id])
 }
