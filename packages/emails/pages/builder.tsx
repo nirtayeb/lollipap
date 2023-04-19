@@ -10,7 +10,7 @@ import GrapesJS from 'grapesjs';
 import { useState, useEffect } from 'react';
 import { SelfService } from '../services/self-service';
 import { useRouter } from 'next/router';
-
+import mondaySdk from "monday-sdk-js";
 
 declare global {
   interface Window { editor: GrapesJS.Editor }
@@ -25,8 +25,17 @@ const Builder = () => {
   templateId = Array.isArray(templateId) ? templateId[0] : templateId
 
   const fetchColumns = async () => {
-    const data = await SelfService.getAllColumns();
-    setColumns(data);
+    const monday = mondaySdk();
+    const query = `query { boards { columns { title }}}`
+
+    const response = await monday.api(query);
+    let columns = [];
+    response.data.boards.forEach((board) => {
+      columns = columns.concat(board.columns.map(col => col.title));
+    });
+
+    columns = Array.from(new Set(columns));
+    setColumns(columns);
   }
 
   const fetchTemplate = async (templateId) => {
@@ -37,7 +46,7 @@ const Builder = () => {
 
   useEffect(()=>{
     window.editor.setComponents(template, {});
-  }, [template, window.editor])
+  }, [template])
 
   useEffect(()=>{
     fetchColumns();

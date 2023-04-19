@@ -7,28 +7,31 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Snackbar, Box, Button, Stack, Typography } from '@mui/material';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AddSenderModal from './AddSenderModal';
 import { useRouter } from 'next/navigation'
 import DeleteIcon from '@mui/icons-material/Delete';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { SelfService } from '../services/self-service';
+import mondaySdk from "monday-sdk-js";
 
-const SendersAdmin = ({ senders }) => {
+const SendersAdmin = () => {
 
     const router = useRouter();
     const [open, setOpen] = useState(false);
-    const handleOpen = () => setOpen(true);
+    const handleOpen = () => {
+      setOpen(true);
+    }
     const handleClose = () => setOpen(false);
 
     const [toastOpen, setToastOpen] = useState(false);
     const [toastText, setToastText] = useState("");
-    const onAddSenderSuccess = useCallback((name, email) => {
+    const onAddSenderSuccess = useCallback(async (name, email) => {
         setToastText(`Verification link sent to ${email}, please check your inbox`);
         setToastOpen(true);
-        router.refresh();
+        await fetchData();
     }, 
-    [setToastOpen, setToastText, router])
+    [setToastOpen, setToastText])
 
     const onFailureToast = useCallback(() => {
         setToastText("Email already exists, please use a different email address");
@@ -37,12 +40,25 @@ const SendersAdmin = ({ senders }) => {
     
     const onCloseCallback = useCallback(() => setToastOpen(false), [setToastOpen]);
 
+    const [senders , setSenders] = useState([]);
+    const [limitReached, setReachedLimit] = useState(false);
+    
+    const fetchData = async () => {
+        const data = await SelfService.getSendersList();
+        setSenders(data.senders);
+        setReachedLimit(data.reachedLimit);
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, [])
+
     const onDelete = async (email) => {
         setToastOpen(false);
         const deleted = await SelfService.deleteSender(email);
         if(deleted){
             setToastText(`${email} Deleted successfuly`)
-            router.refresh()
+            await fetchData();
         }else{
             setToastText(`Couldn't delete ${email}, please try again later`);
         }
@@ -77,13 +93,14 @@ const SendersAdmin = ({ senders }) => {
         marginTop: '1rem',
         marginLeft: 'auto',
         marginRight: 'auto',
+        backgroundColor: 'white',
       }}
     >
       <Stack spacing={2}>
         <Stack direction="row" justifyContent={'space-between'}>
             <Typography variant="h4">Verified Senders</Typography>
             <Box>
-                <Button variant="contained" onClick={handleOpen} color="primary" size="small">Add</Button>
+                <Button variant="contained" onClick={handleOpen} color="primary" size="small" disabled={limitReached}>Add</Button>
             </Box>
         </Stack>
 

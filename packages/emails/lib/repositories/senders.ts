@@ -27,7 +27,7 @@ class SenderRepository {
     }
 
     static async remove(email: string){
-        await prisma.sender.delete({where: {email}});
+        await prisma.sender.deleteMany({where: {email}});
     }
 
     static async countSenders(organizationId: string) {

@@ -1,7 +1,7 @@
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import './styles.css';
 import ResponsiveAppBar from "../comps/ResponsiveAppBar";
+import { Box } from '@mui/material';
 
 function CustomApp({ Component, pageProps }: AppProps) {
   return (
@@ -9,9 +9,11 @@ function CustomApp({ Component, pageProps }: AppProps) {
       <Head>
         <title>Welcome to emails!</title>
       </Head>
-      <main className="app">
+      <main className="app" style={{backgroundColor:"white"}}>
+        <Box sx={{backgroundColor:"#fff"}}>
         <ResponsiveAppBar />
         <Component {...pageProps} />
+        </Box>
       </main>
     </>
   );

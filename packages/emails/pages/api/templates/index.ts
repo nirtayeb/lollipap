@@ -1,11 +1,17 @@
-import { Session } from "next-auth";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "./auth/[...nextauth]";
-import { UserRepository } from '../../lib/repositories/users';
-import { TemplateRepository } from '../../lib/repositories/templates';
-import { UserService } from "packages/emails/services/user-service";
-import SubscriptionService from '../../services/subscription-service';
+import { TemplateRepository } from '../../../lib/repositories/templates';
+import SubscriptionService from '../../../services/subscription-service';
+import { getAccountId } from "../../../lib/monday";
 
+
+const handleGet = async (req, res, orgId) => {
+    const templates = await TemplateRepository.getTemplateByOrganization(orgId);
+    const canAddTemplate = await SubscriptionService.canAddTemplate(orgId)
+
+    res.json({
+        templates,
+        reachedLimit: !canAddTemplate
+    });
+}
 
 const handlePost = async (req, res, orgId) => {
     const { name, content, templateId } = req.body;
@@ -35,25 +41,26 @@ const handleDelete = async(req, res, orgId) => {
     res.status(200).json({ok: deleted})
 }
 
-const handleGet = async (req, res, orgId) => {
-    const { templateId } = req.query;
-    const template = await TemplateRepository.getTemplate(parseInt(templateId), orgId);
-    res.status(200).json(template);
-}
 
 const handler = async (req, res) => {
 
-    const orgId = await UserService.getOrganizationId(req, res);
+    let accountId;
+    try{
+        accountId = getAccountId(req);
+    }catch(error){
+        res.status(401).json({});
+        return;
+    }
 
     switch(req.method){
         case 'POST':
-            await handlePost(req, res, orgId);
+            await handlePost(req, res, accountId);
             break;
         case 'DELETE':
-            await handleDelete(req, res, orgId);
+            await handleDelete(req, res, accountId);
             break;
         case 'GET':
-            await handleGet(req, res, orgId);
+            await handleGet(req, res, accountId);
             break;
         default:
             res.status(405).json({ok:false});

@@ -1,9 +1,9 @@
-import { getMondayToken } from 'packages/emails/lib/monday';
-import mailService from 'packages/emails/services/mailer-service';
+import { getMondayToken } from '../../../emails/lib/monday';
+import mailService from '../../../emails/services/mailer-service';
 import { TemplateRepository } from '../../lib/repositories/templates';
-import MondayService from 'packages/emails/services/monday-service';
+import MondayService from '../../../emails/services/monday-service';
 import SubscriptionService from '../../services/subscription-service';
-import OrganizationRepository from 'packages/emails/lib/repositories/organizations';
+import OrganizationRepository from '../../../emails/lib/repositories/organizations';
 
 
 async function handler(req, res) {

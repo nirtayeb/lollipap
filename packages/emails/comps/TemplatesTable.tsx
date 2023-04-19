@@ -7,15 +7,16 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Snackbar, Box, Button, Stack, Typography } from '@mui/material';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import DeleteIcon from '@mui/icons-material/Delete';
 import { SelfService } from '../services/self-service';
 import Link from 'next/link';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
+import mondaySdk from "monday-sdk-js";
 
-const TemplateAdmin = ({ templates }) => {
+const TemplateAdmin = () => {
 
     const router = useRouter();
 
@@ -24,12 +25,25 @@ const TemplateAdmin = ({ templates }) => {
     
     const onCloseCallback = useCallback(() => setToastOpen(false), [setToastOpen]);
 
+    const [templates , setTemplates] = useState([]);
+    const [limitReached, setReachedLimit] = useState(false);
+
+    useEffect(() => {
+        fetchData();
+    }, [])
+
+    const fetchData = async() => {
+        const data = await SelfService.getAllTemplates();
+        setTemplates(data.templates);
+        setReachedLimit(data.reachedLimit);
+    }
+
     const onDelete = async (template) => {
         setToastOpen(false);
         const deleted = await SelfService.deleteTemplate(template.id);
         if(deleted){
             setToastText(`Template ${template.name} Deleted successfuly`)
-            router.refresh()
+            await fetchData()
         }else{
             setToastText(`Couldn't delete ${template.name}, please try again later`)
         }
@@ -38,16 +52,17 @@ const TemplateAdmin = ({ templates }) => {
 
     const handleCopy = async (template) => {
       setToastOpen(false);
-      const copied = await SelfService.duplicateTemplate(template.id);
-      if(copied){
-        if(copied){
+      const res = await SelfService.duplicateTemplate(template.id);
+      
+      if(res.ok){
           setToastText(`Template ${template.name} duplicated successfuly`)
-          router.refresh()
+          await fetchData();
       }else{
-          setToastText(`Couldn't duplicate ${template.name}, please try again later`)
+          setToastText(`Couldn't duplicate ${template.name}: ${res.error}`)
       }
+
       setToastOpen(true);
-      }
+      
     }
 
     const handleEdit = async(template) => {
@@ -75,7 +90,7 @@ const TemplateAdmin = ({ templates }) => {
             <Typography variant="h4">Templates</Typography>
             <Box>
                 <Link href="/builder" passHref>
-                    <Button variant="contained" color="primary" size="small">Add</Button>
+                    <Button variant="contained" color="primary" size="small" disabled={limitReached}>Add</Button>
                 </Link>
             </Box>
         </Stack>
@@ -102,7 +117,7 @@ const TemplateAdmin = ({ templates }) => {
                   <TableCell>{template.name}</TableCell>
                   <TableCell align="right">
                       <Button variant="text" size="small" color="primary" onClick={()=> handleEdit(template)}><EditIcon /></Button>
-                      <Button varaint="text" size="small" color="secondary" onClick={()=> handleCopy(template)}><ContentCopyIcon /></Button>
+                      <Button variant="text" size="small" color="secondary" onClick={()=> handleCopy(template)}><ContentCopyIcon /></Button>
                       <Button variant="text" size="small" color="error" onClick={handleDelete}><DeleteIcon /></Button>
                     </TableCell>
                   

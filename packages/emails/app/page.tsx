@@ -1,11 +1,8 @@
 import ClientComponent from "./clientComponent";
-import SendersList from "./senders/page";
+import Senders from "../pages/senders";
 
 
 export default function Index(props: { searchParams: Record<string, string> }) {
-
-  const token = props.searchParams.sessionToken;
-
   /*
    * Replace the elements below with your own.
    *
@@ -14,7 +11,7 @@ export default function Index(props: { searchParams: Record<string, string> }) {
   return (
     <div>
       <ClientComponent>
-        <SendersList />
+        <Senders />
       </ClientComponent>
     </div>
   );

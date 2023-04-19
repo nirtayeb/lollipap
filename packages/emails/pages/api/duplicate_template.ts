@@ -1,17 +1,26 @@
 
-import { Session } from "next-auth";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "./auth/[...nextauth]";
-import { UserRepository } from '../../lib/repositories/users';
 import { TemplateRepository } from '../../lib/repositories/templates';
-import { UserService } from "packages/emails/services/user-service";
+import SubscriptionService from '../../services/subscription-service';
+import { getAccountId } from '../..//lib/monday';
 
 const handlePost = async(req, res) => {
-    const orgId = await UserService.getOrganizationId(req, res);
+    let orgId;
+    try{
+        orgId = getAccountId(req);
+    }catch(error){
+        res.status(401).json({});
+        return;
+    }
+
+    if(!await SubscriptionService.canAddTemplate(orgId)){
+        res.status(401).json({error: "You've reached your plan limits"});
+        return;
+    }
+
     const { templateId } = req.body;
     const template = await TemplateRepository.duplicate(orgId, templateId);
-    res.status(200).json(template);
 
+    res.status(200).json(template);
 }
 
 const handler = async (req, res) => {

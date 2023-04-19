@@ -53,6 +53,20 @@ class MailService {
     return true;
   }
 
+  static async removeEmailIdentity(email: string) {
+    const ses = this.getSESClient();
+
+    try {
+      const response = await ses.deleteVerifiedEmailAddress({EmailAddress: email}).promise();
+      console.log("Email verification initiated", response);
+    }catch(error){
+      console.log(error);
+      return false;
+    }
+
+    return true;
+  }
+
   static async verifyEmailIdentity(email: string) {
     const ses = this.getSESClient();
     try{

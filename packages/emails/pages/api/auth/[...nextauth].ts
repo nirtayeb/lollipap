@@ -1,7 +1,7 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import NextAuth, { NextAuthOptions, User as NextAuthUser } from 'next-auth';
-import prisma from 'packages/emails/lib/prisma';
-import MondayService from 'packages/emails/services/monday-service'
+import prisma from '../../../../emails/lib/prisma';
+import MondayService from '../../../../emails/services/monday-service'
 import OrganizationRepository from '../../../lib/repositories/organizations';
 interface NextAuthUserWithStringId extends NextAuthUser {
   id: string;
@@ -10,6 +10,8 @@ interface NextAuthUserWithStringId extends NextAuthUser {
 
 const CLIENT_ID = "330353da306b82058036f937a3328a71"
 const CLIENT_SECRET = "52f61876ae5bfcf9d2e6a4a05d168ab9"
+
+console.log( `${process.env.NEXTAUTH_URL}api/auth/callback/monday`);
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -53,9 +55,9 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         url: 'https://auth.monday.com/oauth2/authorize?client_id='+CLIENT_ID,
         params: {
+          app_version_id: '10097730',
           scope: 'users:read me:read account:read boards:read',
-          redirect_uri:
-            `${process.env.NEXTAUTH_URL}api/auth/callback/monday`,
+          redirect_uri: `${process.env.NEXTAUTH_URL}api/auth/callback/monday`,
         },
       },
       token: {

@@ -1,11 +1,32 @@
 import axios from "axios";
+import mondaySdk from "monday-sdk-js";
 
 
 export class SelfService {
 
-    static async addSender(name: string, email: string){
+    static async getToken() {
+        const monday = mondaySdk();
+        const token = await monday.get("sessionToken");
+        return token.data;
+    }
+
+
+    static async getSendersList() {
+        const token = await this.getToken();
         try{
-            await axios.post('/api/senders', {name, email}, {withCredentials: true});
+            const res = await axios.get(`/api/senders?token=${token}`, {withCredentials: true});
+            return res.data
+        }
+        catch(err){
+            console.log(err);
+            return {senders:[], reachedLimit: false}
+        }
+    }
+
+    static async addSender(name: string, email: string){
+        const token = await this.getToken();
+        try{
+            await axios.post(`/api/senders?token=${token}`, {name, email}, {withCredentials: true});
         }catch(err){
             console.log(err);
             return false;
@@ -15,8 +36,9 @@ export class SelfService {
     }
 
     static async deleteSender(email: string) {
+        const token = await this.getToken();
         try{
-            await axios.delete('/api/senders', {data: {email}, withCredentials: true})
+            await axios.delete(`/api/senders?token=${token}`, {data: {email}, withCredentials: true})
         }
         catch(err){
             console.log(err);
@@ -26,20 +48,23 @@ export class SelfService {
         return true;
     }
 
-    static async getAllColumns(){
+
+    static async getAllTemplates() {
+        const token = await this.getToken();
         try{
-            const res = await axios.get('/api/columns', {withCredentials: true})
-            console.log(res.data);
-            return res.data;
-        }catch(err){
+            const res = await axios.get(`/api/templates?token=${token}`, {withCredentials: true});
+            return res.data
+        }
+        catch(err){
             console.log(err);
-            return [];
+            return {templates:[], reachedLimit: false}
         }
     }
 
     static async getTemplate(templateId: string) {
+        const token = await this.getToken();
         try{
-            const res = await axios.get('/api/templates', {params:{templateId}, withCredentials: true})
+            const res = await axios.get(`/api/templates/${templateId}?token=${token}`,{ withCredentials: true })
             return res.data;
         }catch(err){
             console.log(err);
@@ -48,8 +73,9 @@ export class SelfService {
     }
 
     static async saveTemplate(name, content, templateId){
+        const token = await this.getToken();
         try{
-             await axios.post('/api/templates', {name, content, templateId}, {withCredentials: true});
+             await axios.post(`/api/templates?token=${token}`, {name, content, templateId}, {withCredentials: true});
              return true;
         }catch(err){
             console.log(err);
@@ -58,8 +84,9 @@ export class SelfService {
     }
 
     static async deleteTemplate(templateId){
+        const token = await this.getToken();
         try{
-            await axios.delete('/api/templates', {data: {templateId}, withCredentials: true})
+            await axios.delete(`/api/templates?token=${token}`, {data: {templateId}, withCredentials: true})
             return true;
         }catch(err){
             console.log(err);
@@ -68,19 +95,25 @@ export class SelfService {
     }
 
     static async duplicateTemplate(templateId){
+        const token = await this.getToken();
         try{
-            await axios.post('/api/duplicate_template', {templateId}, {withCredentials: true})
-            return true;
-        }catch(err){
-            console.log(err);
-            return false;
+            await axios.post(`/api/duplicate_template?token=${token}`, {templateId}, {withCredentials: true})
+            return {'ok': true, 'error': ''};
+        }catch(error){
+            console.log(error);
+            let errorMessage = 'An error occurred, please try again later';
+            if (error.response && error.response.data){
+                errorMessage = error.response.data.error
+            }
+            return {'ok': false, 'error': errorMessage}
         }
     }
 
 
     static async resendVerification(senderId){
+        const token = await this.getToken();
         try{
-            await axios.post('/api/resend_verification', {senderId}, {withCredentials: true});
+            await axios.post(`/api/resend_verification?token=${token}`, {senderId}, {withCredentials: true});
             return true;
         }catch(err){
             console.log(err);

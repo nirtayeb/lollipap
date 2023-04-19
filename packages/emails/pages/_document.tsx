@@ -33,7 +33,7 @@ export default class CustomDocument extends Document {
     return (
       <Html>
         <Head>{this.props.styles}</Head>
-        <body>
+        <body style={{backgroundColor:"white"}}>
           <Main />
           <NextScript />
         </body>

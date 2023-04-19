@@ -10,14 +10,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 import Link from 'next/link'
 
 const pages = [{name: 'Senders', href: '/'},
                {name: 'Templates', href: '/templates'}, 
                {name: 'Usage', href:'/usage'}, 
-               {name:'Settings', href:'/settings'}];
+               // {name:'Settings', href:'/settings'}
+              ];
 
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);

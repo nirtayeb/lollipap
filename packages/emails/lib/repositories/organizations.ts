@@ -23,7 +23,7 @@ export default class OrganizationRepository {
     static async subscribe(id: string, subscriptionData: Subscription) {
 
         const [updateResults, subscription] = await prisma.$transaction([
-            prisma.subscription.update({where: {organizationId: id}, data: {active: false}}),
+            prisma.subscription.updateMany({where: {organizationId: id}, data: {active: false}}),
             prisma.subscription.create({
                 data: {
                     isTrial: subscriptionData.is_trial,
